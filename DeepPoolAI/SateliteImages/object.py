@@ -14,17 +14,16 @@ class SquareAerialImage:
         ----------
         key : string
             Bing Api key
-        zoomlevel : integer
+        zoomLevel : integer
             integer between [1,21], amount of zoom in the picture
 
         Returns
         -------
-        AerialImage object that stores information about key, zoom height and width of an image
+        SquareAerialImage object that stores information about key and zoom of an image
         """
 
         self.key = key
         self.zoomLevel = zoomLevel
-
 
         return
 
@@ -38,12 +37,11 @@ class SquareAerialImage:
         lat : double
             latitude
         long : double
-            longtitude
+            longitude
 
         Returns
         -------
         Square photo without label on lower bound
-
         """
         request = urlopen("https://dev.virtualearth.net/REST/V1/Imagery/Metadata/Aerial/"
                           f"{lat},{long}?zl={self.zoomLevel}"
@@ -56,6 +54,7 @@ class SquareAerialImage:
 
         return image
 
+
 class AerialImage(SquareAerialImage):
     """Square Aerial Image
       Wrapper for Bing api. Extension for square aerial image.
@@ -66,11 +65,7 @@ class AerialImage(SquareAerialImage):
       ----------
       key : string
           Bing Api key
-      long: double
-          longitude
-      lat : double
-          latitude
-      zoomlevel : integer
+      zoomLevel : integer
           integer between [1,21], amount of zoom in the picture
       height : integer
           height of an aerial map in pixels. Does not work with square
@@ -80,33 +75,30 @@ class AerialImage(SquareAerialImage):
 
       Returns
       -------
-      AerialImage object that stores information about key, zoom height and width of an image
+      AerialImage object that stores information about key, zoom, height and width of an image
     """
 
-
-
-    def __init__(self,key, zoomLevel, width = 1080, height = 720):
-
+    def __init__(self, key, zoomLevel, width=1080, height=720):
         super().__init__(key, zoomLevel)
         self.height = height
         self.width = width
 
     def get_photo(self, lat, long):
         """ Get Photo
-        Gets square 256x256 photo of area given the long and lat.
-        Uses zoom level and key from the object.
+        Gets photo of area given the long, lat.
+        Uses zoom level, width, height and key from the object.
 
         Parameters
         ----------
         lat : double
             latitude
         long : double
-            longtitude
+            longitude
 
 
         Returns
         -------
-        Square photo without label on lower bound
+        Photo of custom size
 
         """
 
@@ -116,4 +108,3 @@ class AerialImage(SquareAerialImage):
         image = Image.open(urlopen(request))
 
         return image
-
