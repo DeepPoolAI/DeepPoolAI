@@ -1,2 +1,2 @@
 # DeepPoolAI
-System wspomagający marketing firm czyszczących baseny oraz oferujących systemy bezpieczństwa przed utonięciami(drowning detection system) a także udostępniający dane o adresach domów z basenami. System zwraca lokalizację basenów oraz ich stopień zabrudzenia, które pozwalają na obranie lepszej strategii marketingowej.
+System detects pools from aerial photos. It aids businesses such as pool cleaning or ones selling drowning detection systems or other pool supplies. System assigns pools to the addresses. It localizes pools and potentially their level of cleannes which helps to obtain better marketing strategy.
