@@ -2,7 +2,8 @@ import json
 from urllib.request import urlopen
 
 from PIL import Image
-
+import matplotlib.pyplot as plt
+from .utils import  coverTerrain
 
 class SquareAerialImage:
 
@@ -103,8 +104,50 @@ class AerialImage(SquareAerialImage):
         """
 
         request = f"https://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial/{lat},{long}/{self.zoomLevel}?" \
-                  f"mapSize={self.width},{self.height}&key={self.key}"
+                  f"_MapSize={self.width},{self.height}&key={self.key}"
 
         image = Image.open(urlopen(request))
 
         return image
+
+    def get_coords(self, lat1, long1, lat2, long2):
+        """
+        Get coords between 2 rectangle points. They can be then
+        iterated and plotted.
+
+        Return:
+            np.ndarray
+        """
+
+        coords = coverTerrain(lat1, lat2, long1, long2, self.zoomLevel, 256, 256)
+        return coords
+
+    def get_grid_photos(self, lat1, long1, lat2,long2):
+        """
+        Returns a tuple (array_of_photos, plt)
+        """
+
+        coords = self.get_coords(lat1, long1, lat2,long2)
+        if len(list(coords.shape)) != 3:
+            raise Exception("You should bet a bit bigger terrain, grid should be at least 2x2 to work")
+        coords_shape = coords.shape[0:2]
+
+        f, axarr = plt.subplots(coords_shape[1],
+                                coords_shape[0], squeeze=True)
+        photos = []
+        for i in range(coords_shape[0]):
+            for j in range(coords_shape[1]):
+                photo = self.get_square_photo(coords[i][j][0], coords[i][j][1])
+                photos.append(photo)
+                axarr[j, i].axis("off")
+                axarr[j, i].imshow(photo, aspect='auto')
+
+        plt.subplots_adjust(hspace=0, wspace=0)
+        return photos, plt
+
+class GridPhotos:
+    #TODO
+    # Make a class that contains array of photos with method to visualize it.
+    pass
+
+
