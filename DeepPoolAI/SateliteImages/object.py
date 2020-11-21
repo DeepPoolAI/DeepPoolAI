@@ -145,9 +145,42 @@ class AerialImage(SquareAerialImage):
         plt.subplots_adjust(hspace=0, wspace=0)
         return photos, plt
 
-class GridPhotos:
-    #TODO
-    # Make a class that contains array of photos with method to visualize it.
-    pass
+class GridPhotos(AerialImage):
+
+    def __init__(self, lat1, long1, lat2, long2, key, zoomLevel, width, height):
+        super().__init__(key, zoomLevel, width, height)
+        self.photos = None
+        self.key = key
+        self.lat1 = lat1
+        self.long1 = long1
+        self.lat2 = lat2
+        self.long2 = long2
+
+    def get_grid(self):
+        """
+               Saves all grid photos within object array.
+               Prints whole grid.
+        """
+        arr, plt = self.get_grid_photos(self.lat1, self.long1, self.lat2, self.long2)
+        self.photos = arr
+        return
+
+    def get_grid_photo(self, i):
+        """
+        Gets particular photo from saved grid
+
+        Parameters
+        ----------
+        i : double
+            photo index
+
+        Returns
+        -------
+        Grid photo of given index
+        """
+        if self.photos is None:
+            raise Exception("No photos found - you need to load grid by get_grid() first")
+        return self.photos[i]
+
 
 

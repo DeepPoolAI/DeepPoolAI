@@ -1,5 +1,6 @@
-from .SateliteImages.object import AerialImage
+from .SateliteImages.object import AerialImage, GridPhotos
 
 __all__ = [
-    "AerialImage"
+    "AerialImage",
+    "GridPhotos"
 ]
