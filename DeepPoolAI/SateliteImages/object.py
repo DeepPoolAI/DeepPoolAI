@@ -104,7 +104,7 @@ class AerialImage(SquareAerialImage):
         """
 
         request = f"https://dev.virtualearth.net/REST/v1/Imagery/Map/Aerial/{lat},{long}/{self.zoomLevel}?" \
-                  f"_MapSize={self.width},{self.height}&key={self.key}"
+                  f"mapSize={self.width},{self.height}&key={self.key}"
 
         image = Image.open(urlopen(request))
 
