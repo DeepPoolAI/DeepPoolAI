@@ -1,9 +1,12 @@
 import json
 from urllib.request import urlopen
+from copy import deepcopy
 
 from PIL import Image
 import matplotlib.pyplot as plt
-from .utils import  coverTerrain
+from .utils import  coverTerrain, _PixelXYToLatLong, _LatLongToPixelXY
+from ..PoolDetector.object import PoolDetector
+import numpy as np
 
 class SquareAerialImage:
 
@@ -119,10 +122,10 @@ class AerialImage(SquareAerialImage):
             np.ndarray
         """
 
-        coords = coverTerrain(lat1, lat2, long1, long2, self.zoomLevel, 256, 256)
+        coords = coverTerrain(lat1, lat2, long1, long2, self.zoomLevel, self.width, self.height)
         return coords
 
-    def get_grid_photos(self, lat1, long1, lat2,long2):
+    def get_grid_photos(self, lat1, long1, lat2, long2):
         """
         Returns a tuple (array_of_photos, plt)
         """
@@ -137,7 +140,7 @@ class AerialImage(SquareAerialImage):
         photos = []
         for i in range(coords_shape[0]):
             for j in range(coords_shape[1]):
-                photo = self.get_square_photo(coords[i][j][0], coords[i][j][1])
+                photo = self.get_photo(coords[i][j][0], coords[i][j][1])
                 photos.append(photo)
                 axarr[j, i].axis("off")
                 axarr[j, i].imshow(photo, aspect='auto')
@@ -145,25 +148,58 @@ class AerialImage(SquareAerialImage):
         plt.subplots_adjust(hspace=0, wspace=0)
         return photos, plt
 
-class GridPhotos(AerialImage):
+class GridPhotos:
 
     def __init__(self, lat1, long1, lat2, long2, key, zoomLevel, width, height):
-        super().__init__(key, zoomLevel, width, height)
+
+        ai = AerialImage(key, zoomLevel, width, height)
+        self.ai = ai
+
+        self.width = width
+        self.height = height
+        self.zoomLevel = zoomLevel
         self.photos = None
-        self.key = key
+        self.pool_coords = None
         self.lat1 = lat1
         self.long1 = long1
         self.lat2 = lat2
         self.long2 = long2
+        self.coords =  coverTerrain(lat1, lat2, long1, long2, zoomLevel, width, height)
+
+
+    def fit(self):
+
+        coords = self.coords
+         # no matter the grid
+        coords = deepcopy(coords.flatten().reshape(1, coords.shape[0] * coords.shape[1], 2)[0])
+
+
+        pool_coordinates = []
+        for coord in coords:
+
+            pd = PoolDetector(self.ai.get_photo(coord[0], coord[1]))
+            pd.get_pools()
+            middle_x = self.width//2
+            middle_y = self.height//2
+            if pd.pixel_coords is not None:
+                for pool_coord in np.floor(pd.pixel_coords):
+                    x, y = _LatLongToPixelXY(coord[0],coord[1], self.zoomLevel)
+                    diff_x = pool_coord[0] - middle_x
+                    diff_y = pool_coord[1] - middle_y
+                    lat, long = _PixelXYToLatLong(x + diff_x, y + diff_y, self.zoomLevel)
+                    pool_coordinates.append([lat,long])
+            pd = None
+
+        self.pool_coords = pool_coordinates
+
+        return
 
     def get_grid(self):
         """
                Saves all grid photos within object array.
                Prints whole grid.
         """
-        arr, plt = self.get_grid_photos(self.lat1, self.long1, self.lat2, self.long2)
-        self.photos = arr
-        return
+        self.ai.get_grid_photos(self.lat1, self.long1, self.lat2, self.long2)
 
     def get_grid_photo(self, i):
         """
