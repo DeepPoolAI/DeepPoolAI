@@ -1,3 +1,5 @@
 **.ipynb
 main.py
 **/venv/**
+__pycache__
+key.*
