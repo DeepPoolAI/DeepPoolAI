@@ -6,7 +6,10 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from .utils import  coverTerrain, _PixelXYToLatLong, _LatLongToPixelXY
 from ..PoolDetector.object import PoolDetector
+from tqdm import tqdm
 import numpy as np
+import random
+import time
 
 class SquareAerialImage:
 
@@ -150,7 +153,7 @@ class AerialImage(SquareAerialImage):
 
 class GridPhotos:
 
-    def __init__(self, lat1, long1, lat2, long2, key, zoomLevel, width, height):
+    def __init__(self, lat1, long1, lat2, long2, key, zoomLevel, width, height, coverage = 1, sleep_range=[0, 0]):
 
         ai = AerialImage(key, zoomLevel, width, height)
         self.ai = ai
@@ -165,18 +168,17 @@ class GridPhotos:
         self.lat2 = lat2
         self.long2 = long2
         self.coords =  coverTerrain(lat1, lat2, long1, long2, zoomLevel, width, height)
-
+        self.coverage = coverage
+        self.sleep_range = sleep_range
 
     def fit(self):
-
         coords = self.coords
          # no matter the grid
         coords = deepcopy(coords.flatten().reshape(1, coords.shape[0] * coords.shape[1], 2)[0])
 
-
         pool_coordinates = []
-        for coord in coords:
-
+        for coord in tqdm(list(filter(lambda c: random.random() < self.coverage, coords))):
+            time.sleep(random.uniform(self.sleep_range[0], self.sleep_range[1]))
             pd = PoolDetector(self.ai.get_photo(coord[0], coord[1]))
             pd.get_pools()
             middle_x = self.width//2
