@@ -64,7 +64,7 @@ class PoolAddressParser:
             response_json = json.loads(request.read())
             if response_json["statusCode"] == 200:
                 pool_data = {
-                    "coordinates": [pools_coord[i]],
+                    "coordinates": pools_coord[i],
                     "address": response_json['resourceSets'][0]['resources'][0]['address']
                 }
                 pools_addresses.append(pool_data)
