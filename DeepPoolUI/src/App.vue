@@ -8,7 +8,14 @@
     <router-view/>
   </div>
 </template>
-
+<script>
+export default {
+  name: 'App',
+  mounted () {
+    this.$store.dispatch('init')
+  }
+}
+</script>
 <style>
 body {
   margin: 0;
