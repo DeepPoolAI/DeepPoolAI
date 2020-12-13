@@ -268,6 +268,10 @@ class Pool:
             pool.__setattr__(k, obj.get(k))
         return pool
 
+    def set_color(self, color):
+        self.color = color
+        self.clean = self.color[1] - 15 <= self.color[2]
+
 class PolygonPhotos:
     exportable_fields = ['nodes', 'todo', 'done', '_id', 'width', 'height', 'zoomLevel', 'progress', 'is_working', 'name', 'osm_done', 'pools_detected', 'working_machine']
 
@@ -370,12 +374,13 @@ class PolygonPhotos:
             middle_x = self.width//2
             middle_y = self.height//2
             if pd.pixel_coords is not None:
-                for pool_coord in np.floor(pd.pixel_coords):
+                for pool_index, pool_coord in enumerate(np.floor(pd.pixel_coords)):
                     x, y = _LatLongToPixelXY(coord[0],coord[1], self.zoomLevel)
                     diff_x = pool_coord[0] - middle_x
                     diff_y = pool_coord[1] - middle_y
                     lat, long = _PixelXYToLatLong(x + diff_x, y + diff_y, self.zoomLevel)
                     pool = Pool(lat, long, self._id)
+                    pool.set_color(pd.mean_colors[pool_index].tolist())
                     pool.find_address(self.key)
                     self.pool_buffer.append(pool)
             self.done.append(coord)
