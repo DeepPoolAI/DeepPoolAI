@@ -71,4 +71,12 @@ class AdminServer:
             pp.get_osm_data(self.machine_id)
             return Response(json.dumps({ 'ok': True }, default=convert), content_type='application/json')
 
+        @app.route("/batches/<string:batch_id>", methods=["DELETE"])
+        def del_batch(batch_id):
+            try:
+                self.db.delete_batch(batch_id)
+                return Response(json.dumps({ 'ok': True }, default=convert), content_type='application/json')
+            except:
+                abort(403)
+
         app.run(host=host, port=port)

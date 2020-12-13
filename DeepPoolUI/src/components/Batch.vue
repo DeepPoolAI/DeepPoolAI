@@ -18,10 +18,11 @@
         <input v-if="inp.type === 'number'" type='number' :name="inp.name" @change="updateValue(inp.name, $event.target.valueAsNumber)" :value="values[inp.name]" :step="inp.step"/>
         <span class="error" v-for="e in inp.errors" :key="e">{{ e }}</span>
       </div>
-      <button class="save">Run task</button>
+      <button class="green button">Run task</button>
     </form>
     <Loading v-else-if="batch.is_working" :progress="batch.progress" />
-    <button v-if="!batch.is_working && !batch.osm_done" class="osm" @click="doOsm">Assign OSM polygons</button>
+    <button v-if="!batch.is_working && !batch.osm_done" class="button" @click="doOsm">Assign OSM polygons</button>
+    <button v-if="!batch.is_working" class="red button" @click="delBatch">Delete batch</button>
   </div>
 </template>
 <script>
@@ -70,6 +71,10 @@ export default {
     doOsm () {
       this.$store.dispatch('batchRunOsm', this.batch.batch_id)
       this.$emit('close')
+    },
+    delBatch () {
+      this.$store.dispatch('deleteBatch', this.batch.batch_id)
+      this.$emit('close')
     }
   },
   components: {
@@ -86,6 +91,16 @@ export default {
   top: 50px;
   right: 50px;
   padding: 10px 0px;
+}
+.batch .button {
+  width: calc(100% - 40px);
+  height: 30px;
+  border: 2px solid blue;
+  background: white;
+  cursor: pointer;
+  font-weight: 600;
+  color: blue;
+  margin: 10px 20px;
 }
 .batch > .close {
   position: absolute;
@@ -119,16 +134,6 @@ export default {
   color: red;
   display: block;
 }
-.batch > form > .save {
-  width: calc(100% - 40px);
-  height: 30px;
-  border: 2px solid green;
-  background: white;
-  cursor: pointer;
-  font-weight: 600;
-  color: green;
-  margin: 10px 20px;
-}
 .batch > span.prop {
   display: block;
   font-size: 18px;
@@ -142,14 +147,12 @@ export default {
   left: 50%;
   transform: translateX(-50%);
 }
-.batch > button.osm {
-  width: calc(100% - 40px);
-  height: 30px;
-  border: 2px solid blue;
-  background: white;
-  cursor: pointer;
-  font-weight: 600;
-  color: blue;
-  margin: 10px 20px;
+.batch button.green {
+  color: green;
+  border-color: green;
+}
+.batch button.red {
+  border-color: red;
+  color: red;
 }
 </style>

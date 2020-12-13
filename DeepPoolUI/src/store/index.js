@@ -77,6 +77,12 @@ const actions = {
     }
     Vue.http.post(getters.server + 'batches/' + batchId + '/run', options)
   },
+  deleteBatch ({ getters }, batchId) {
+    if (!getters.server) {
+      return
+    }
+    Vue.http.delete(getters.server + 'batches/' + batchId)
+  },
   batchRunOsm ({ getters }, batchId) {
     if (!getters.server) {
       return

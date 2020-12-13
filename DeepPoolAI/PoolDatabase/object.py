@@ -47,3 +47,11 @@ class PoolDatabase:
 
     def close_tasks_for_machine(self, machine_id):
         self.db['batches'].update_many({ 'working_machine': machine_id }, { '$set': { 'is_working': False } })
+
+    def delete_batch(self, batch_id):
+        if not self.get_batch(batch_id).get('is_working'):
+            batch_id = ObjectId(batch_id)
+            self.db['pools'].delete_many({ 'batch': batch_id })
+            self.db['batches'].delete_one({ '_id': batch_id })
+        else:
+            raise Exception('Cannot remove working batch')
