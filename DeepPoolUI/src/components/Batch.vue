@@ -20,7 +20,7 @@
       </div>
       <button class="save">Run task</button>
     </form>
-    <Loading v-else :progress="batch.progress" />
+    <Loading v-else-if="batch.is_working" :progress="batch.progress" />
     <button v-if="!batch.is_working && !batch.osm_done" class="osm" @click="doOsm">Assign OSM polygons</button>
   </div>
 </template>
