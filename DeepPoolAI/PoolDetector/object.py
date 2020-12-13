@@ -10,10 +10,10 @@ class PoolDetector:
         self.photo = photo
         self.pixel_coords = None
         self.boxes = None
+        self.mean_colors = []
 
     def get_pools(self):
         img = np.array(self.photo)
-
         ref_colors = [{
             'hsv': np.array([85.55029586, 67.23076923, 167.73964497]),
             'radius': np.array([30, 30, 30])
@@ -47,9 +47,29 @@ class PoolDetector:
 
         self.boxes = boxes
         boxes = np.array(boxes)
+        median_color = []
+
+        # amount of pixels from center
+        pixels_from_center = 3
+
         if len(boxes) > 0 :
-            self.pixel_coords = np.concatenate((boxes[:, :2].mean(axis=1).reshape(boxes.shape[0], 1),
+            pixel_coords = np.concatenate((boxes[:, :2].mean(axis=1).reshape(boxes.shape[0], 1),
                                             boxes[:, 2:].mean(axis=1).reshape(boxes.shape[0], 1)), axis=1).tolist()
+            self.pixel_coords = pixel_coords
+            pixel_coords_array = np.array(pixel_coords)
+            for pixel_coord in pixel_coords_array:
+
+                x_start = pixel_coord[0] - pixels_from_center
+                x_end   = pixel_coord[0] + pixels_from_center
+                y_start = pixel_coord[1] - pixels_from_center
+                y_end   = pixel_coord[1] + pixels_from_center
+
+                color_grid = np.meshgrid(np.arange(x_start, x_end+1), np.arange(y_start, y_end+1), indexing='ij')
+
+                mean_col = img[color_grid[1].astype("int32"), color_grid[0].astype("int32")].mean(axis = 1).mean(axis = 0)
+
+                self.mean_colors.append(mean_col)
+
         return
 
     def print_boxes(self):
