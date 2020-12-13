@@ -271,7 +271,7 @@ class Pool:
     def set_color(self, color):
         self.color = color
         self.clean = self.color[1] - 15 <= self.color[2]
-
+        
 class PolygonPhotos:
     exportable_fields = ['nodes', 'todo', 'done', '_id', 'width', 'height', 'zoomLevel', 'progress', 'is_working', 'name', 'osm_done', 'pools_detected', 'working_machine']
 
