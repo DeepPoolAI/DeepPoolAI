@@ -1,25 +1,18 @@
 import json
 import random
 import time
-from copy import deepcopy
-from urllib.request import urlopen
-
-import matplotlib.pyplot as plt
-import numpy as np
-from PIL import Image
-from tqdm import tqdm
-
-from .utils import coverTerrain, _PixelXYToLatLong, _LatLongToPixelXY
-from ..PoolDetector.object import PoolDetector
-
-from .utils import  coverTerrain, _PixelXYToLatLong, _LatLongToPixelXY, coverPolygon
-from ..PoolDetector.object import PoolDetector
-from tqdm import tqdm
-import numpy as np
 import random
 import time
-from ..PoolDatabase.object import PoolDatabase
+import numpy as np
+import matplotlib.pyplot as plt
+from copy import deepcopy
+from urllib.request import urlopen
+from PIL import Image
+from tqdm import tqdm
 from bson.objectid import ObjectId
+from .utils import  coverTerrain, _PixelXYToLatLong, _LatLongToPixelXY, coverPolygon
+from ..PoolDetector.object import PoolDetector
+from ..PoolDatabase.object import PoolDatabase
 from ..PoolAddressParser.object import PoolAddressParser
 from ..PoolPolygonsFinder.object import PoolPolygonsFinder
 
@@ -237,7 +230,6 @@ class GridPhotos:
         if self.photos is None:
             raise Exception("No photos found - you need to load grid by get_grid() first")
         return self.photos[i]
-
 
 class Pool:
     exportable_fields = ['coordinates', '_id', 'color', 'clean', 'address', 'osm', 'batch']
