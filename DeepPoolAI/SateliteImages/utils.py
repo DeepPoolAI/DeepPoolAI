@@ -1,6 +1,18 @@
-
 import math
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 import numpy as np
+
+def coverPolygon(nodes, zoomLevel, height, width):
+    if nodes[len(nodes) - 1] != nodes[0]:
+        nodes = nodes + [nodes[0]]
+    lats = list(map(lambda p: p[0], nodes))
+    lons = list(map(lambda p: p[1], nodes))
+    polygon = Polygon(list(map(lambda n: (n[0], n[1]), nodes)))
+    terr = coverTerrain(min(lats), max(lats), min(lons), max(lons), zoomLevel, height, width)
+    coords = terr.flatten().reshape(1, terr.shape[0] * terr.shape[1], 2)[0]
+    coords = list(filter(lambda c: polygon.contains(Point(c[0], c[1])), coords))
+    return list(map(lambda c: c.tolist(), coords))
 
 def coverTerrain(fromLat, toLat, fromLon, toLon, zoomLevel, height, width):
     """

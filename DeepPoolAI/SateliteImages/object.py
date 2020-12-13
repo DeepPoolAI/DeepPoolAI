@@ -12,6 +12,16 @@ from tqdm import tqdm
 from .utils import coverTerrain, _PixelXYToLatLong, _LatLongToPixelXY
 from ..PoolDetector.object import PoolDetector
 
+from .utils import  coverTerrain, _PixelXYToLatLong, _LatLongToPixelXY, coverPolygon
+from ..PoolDetector.object import PoolDetector
+from tqdm import tqdm
+import numpy as np
+import random
+import time
+from ..PoolDatabase.object import PoolDatabase
+from bson.objectid import ObjectId
+from ..PoolAddressParser.object import PoolAddressParser
+from ..PoolPolygonsFinder.object import PoolPolygonsFinder
 
 class SquareAerialImage:
 
@@ -227,3 +237,159 @@ class GridPhotos:
         if self.photos is None:
             raise Exception("No photos found - you need to load grid by get_grid() first")
         return self.photos[i]
+
+
+class Pool:
+    exportable_fields = ['coordinates', '_id', 'color', 'clean', 'address', 'osm', 'batch']
+    def __init__(self, lat, lng, batch):
+        self.coordinates = [lat, lng]
+        self.batch = batch
+        self.color = None
+        self.clean = None
+        self.address = None
+        self.osm = None
+        self._id = None
+
+    def find_address(self, key):
+        if self.address is None:
+            parser = PoolAddressParser(key)
+            try:
+                self.address = parser.get_addresses([self.coordinates], verbose=False)[0]
+            except:
+                pass
+
+    def export_to_db(self, db):
+        if self._id is None:
+            self._id = ObjectId()
+        if db is None:
+            db = PoolDatabase()
+        data = {}
+        for field in self.exportable_fields:
+            data[field] = self.__getattribute__(field)
+        db.set_point(data)
+
+    @staticmethod
+    def import_obj(obj):
+        coordinates = obj.get('coordinates').get('coordinates')
+        pool = Pool(coordinates[0], coordinates[1], obj.get('batch'))
+        for k in ['color', 'clean', 'address', 'osm', '_id']:
+            pool.__setattr__(k, obj.get(k))
+        return pool
+
+class PolygonPhotos:
+    exportable_fields = ['nodes', 'todo', 'done', '_id', 'width', 'height', 'zoomLevel', 'progress', 'is_working', 'name', 'osm_done', 'pools_detected', 'working_machine']
+
+    def __init__(self, nodes, key, zoomLevel, width, height, name='unnamed'):
+        ai = AerialImage(key, zoomLevel, width, height)
+        self.ai = ai
+        self.key = key
+        self.width = width
+        self.height = height
+        self.zoomLevel = zoomLevel
+        self.photos = None
+        self.pool_coords = []
+        self.nodes = nodes
+        self.todo = coverPolygon(nodes, zoomLevel, width, height)
+        self.done = []
+        self.is_working = False
+        self.progress = 0
+        self.working_machine = None
+        self.name = name
+        self.pool_buffer = []
+        self._id = None
+        self.osm_done = False
+        self.pools_detected = 0
+
+    def get_osm_data(self, working_machine=None):
+        db = PoolDatabase()
+        self.update()
+        if self.is_working:
+            raise Exception('Already running')
+        self.working_machine = working_machine
+        self.is_working = True
+        self.progress = -1 # unncountable progress
+        self.export_to_db()
+
+        pools = db.get_pools_for_batch(self._id)
+        pools = list(map(lambda x: Pool.import_obj(x), pools))
+        coords = list(map(lambda x: x.coordinates, pools))
+        ppf = PoolPolygonsFinder()
+        levels = [4, 6, 8]
+        polygons = ppf.assign_polygons(coords, level=levels)
+        for index, pool in enumerate(pools):
+            pool.osm = { 'lvl_' + str(k): polygons[i][index] for i, k in enumerate(levels) }
+            pool.export_to_db(db)
+        self.osm_done = True
+        self.is_working = False
+        self.export_to_db()
+
+    @staticmethod
+    def import_from_db(key, _id):
+        db = PoolDatabase()
+        batch = db.get_batch(_id, geo_fields=['done', 'todo', 'nodes'])
+        obj = PolygonPhotos(batch.get('nodes'), key, batch.get('zoomLevel'), batch.get('width'), batch.get('height'))
+        for field in PolygonPhotos.exportable_fields:
+            obj.__setattr__(field, batch.get(field))
+        return obj
+
+    def update(self):
+        if self._id is None:
+            return
+        db = PoolDatabase()
+        batch = db.get_batch(self._id, geo_fields=['done', 'todo', 'nodes'])
+        for field in PolygonPhotos.exportable_fields:
+            self.__setattr__(field, batch.get(field))
+
+    def export_to_db(self):
+        if self._id is None:
+            self._id = ObjectId()
+        db = PoolDatabase()
+        data = {}
+        self.pools_detected += len(self.pool_buffer)
+        for field in self.exportable_fields:
+            data[field] = self.__getattribute__(field)
+        db.set_batch(data, geo_fields=['done', 'todo', 'nodes'])
+        for pool in self.pool_buffer:
+            pool.export_to_db(db)
+        self.pool_buffer = []
+
+    def fit(self, coverage=1, sleep_range=[0, 1], working_machine=None):
+        self.update()
+        if self.is_working:
+            raise Exception('Already running')
+        self.is_working = True
+        self.working_machine = working_machine
+        self.progress = 0
+        self.osm_done = False
+        self.export_to_db()
+
+        todo = list(filter(lambda c: random.random() < coverage, self.todo))
+        self.pool_buffer = []
+        for index, coord in tqdm(list(enumerate(todo))):
+            # update progress at database
+            if index % 15 == 0:
+                self.progress = index / len(todo)
+                self.export_to_db()
+            # random sleep
+            time.sleep(random.uniform(sleep_range[0], sleep_range[1]))
+            # detect pools
+            pd = PoolDetector(self.ai.get_photo(coord[0], coord[1]))
+            pd.get_pools()
+            middle_x = self.width//2
+            middle_y = self.height//2
+            if pd.pixel_coords is not None:
+                for pool_coord in np.floor(pd.pixel_coords):
+                    x, y = _LatLongToPixelXY(coord[0],coord[1], self.zoomLevel)
+                    diff_x = pool_coord[0] - middle_x
+                    diff_y = pool_coord[1] - middle_y
+                    lat, long = _PixelXYToLatLong(x + diff_x, y + diff_y, self.zoomLevel)
+                    pool = Pool(lat, long, self._id)
+                    pool.find_address(self.key)
+                    self.pool_buffer.append(pool)
+            self.done.append(coord)
+            self.todo.remove(coord)
+            pd = None
+        self.progress = 1
+        self.is_working = False
+        self.export_to_db()
+        return
