@@ -55,3 +55,9 @@ class PoolDatabase:
             self.db['batches'].delete_one({ '_id': batch_id })
         else:
             raise Exception('Cannot remove working batch')
+
+    def get_pools_for_polygon(self, polygon_id):
+        paths = ['osm.lvl_' + str(i) for i in range(1, 11)]
+        queries = [{ path: polygon_id } for path in paths]
+        print(queries)
+        return list(self.db['pools'].find({ '$or': queries }))

@@ -9,10 +9,10 @@
         <span class="name">{{ poly.name }}</span>
         <span class="price">{{ poly.price + '$' }}</span>
       </div>
-      <div class="element checkout">
+      <router-link to="/checkout" class="element checkout">
         <span class="name">Checkout</span>
         <span class="price">{{ sum + '$' }}</span>
-      </div>
+      </router-link>
     </div>
   </div>
 </template>
@@ -90,6 +90,8 @@ export default {
   position: relative;
   padding: 10px 30px;
   padding-right: 50px;
+  display: block;
+  text-decoration: none;
 }
 .cart > .list > .element:hover {
   background: #eee;
@@ -111,5 +113,6 @@ export default {
   border-top: 1px solid #ccc;
   cursor: pointer;
   margin-top: 10px;
+  color: #4378bf;
 }
 </style>

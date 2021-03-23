@@ -1,18 +1,18 @@
 <template>
   <div id="app">
-    <!--
-    <div id="nav">
-      <router-link to="/">Map</router-link>
-    </div>
-    -->
+    <Map v-if="$route.name !== 'AdminPanel'"/>
     <router-view/>
   </div>
 </template>
 <script>
+import Map from '@/components/Map.vue'
 export default {
   name: 'App',
   mounted () {
     this.$store.dispatch('init')
+  },
+  components: {
+    Map
   }
 }
 </script>

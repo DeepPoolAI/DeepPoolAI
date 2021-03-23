@@ -4,6 +4,7 @@ from .PoolAddressParser.object import PoolAddressParser
 from .PoolPolygonsFinder.object import PoolPolygonsFinder
 from .PoolDatabase.object import PoolDatabase
 from .AdminServer.object import AdminServer
+from .ClientServer.object import ClientServer
 
 __all__ = [
     "AerialImage",
@@ -13,5 +14,6 @@ __all__ = [
     "PoolAddressParser",
     "PoolPolygonsFinder",
     "PolygonPhotos",
-    "AdminServer"
+    "AdminServer",
+    "ClientServer"
 ]

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "file-saver": "^2.0.5",
     "mapbox": "^1.0.0-beta10",
     "mapbox-gl": "^1.13.0",
     "mapbox-gl-draw": "^0.16.0",
